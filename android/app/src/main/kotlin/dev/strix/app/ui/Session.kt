@@ -129,7 +129,8 @@ private fun Transcript(c: SessionController, state: LazyListState, onSuggest: (S
     ) {
         if (c.items.isEmpty()) item("empty") { EmptyState(onSuggest) }
         if (c.todos.isNotEmpty()) item("todos") { TodoCard(c) }
-        itemsIndexed(c.items, key = { i, it -> if (it.id.isNotEmpty()) it.id else "$i" }) { _, it -> Entry(it) }
+        // Index keys: items are only ever appended or updated in place, and models may reuse tool-call ids.
+        itemsIndexed(c.items, key = { i, _ -> i }) { _, it -> Entry(it) }
         if (c.running) item("working") { WorkingRow() }
     }
 }

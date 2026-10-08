@@ -135,7 +135,7 @@ class SessionController(
             is AgentEvent.ToolDone -> {
                 val newChanges = if (ws != null && isWrite(e.name)) ws!!.changes() else null
                 post {
-                    val i = items.indexOfFirst { it.id == e.id }
+                    val i = items.indexOfLast { it.id == e.id && it.running }
                     val item = TranscriptItem("tool", items.getOrNull(i)?.text.orEmpty(), e.name, e.ok, e.id, false, e.output.take(1500), e.summary)
                     if (i >= 0) items[i] = item else items += item
                     if (newChanges != null) { changes = newChanges; persist() }

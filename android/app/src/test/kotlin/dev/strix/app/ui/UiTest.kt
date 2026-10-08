@@ -140,6 +140,20 @@ class UiTest {
         assertEquals(Screen.Diff, vm.screen)
     }
 
+    @Test fun sessionWithReusedToolIdsRendersWithoutCrashing() = runBlocking {
+        val llm = ScriptedLlm(mutableListOf(
+            call("list_dir", "{}", "call_0"), call("read_file", """{"path":"src/a.kt"}""", "call_0"), call("grep", """{"pattern":"fun"}""", "call_0"), say("ok"),
+        ))
+        val c = controller(llm); c.load(); c.send("look around the repo please")
+        vm.seedForTest(session = c)
+        content { SessionScreen(vm, c) }
+        rule.waitForIdle()
+        assertEquals(3, rule.onAllNodesWithText("src", substring = true).fetchSemanticsNodes().size.coerceAtLeast(3))
+        rule.onNodeWithText("LIST_DIR").assertIsDisplayed()
+        rule.onNodeWithText("GREP").assertIsDisplayed()
+        shot("13-session-reused-ids")
+    }
+
     @Test fun diffScreenExpandsAndCommits() = runBlocking {
         val gh = FakeGitHub()
         val llm = ScriptedLlm(mutableListOf(

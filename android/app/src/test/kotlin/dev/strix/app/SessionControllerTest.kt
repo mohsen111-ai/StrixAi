@@ -180,6 +180,23 @@ class SessionControllerTest {
         assertTrue(c.items.last().text.contains("every model"))
     }
 
+    @Test fun reusedToolCallIdsDoNotCollide() = runBlocking {
+        // Several open models answer every step with id "call_0".
+        val llm = ScriptedLlm(mutableListOf(
+            call("read_file", """{"path":"src/a.kt"}""", "call_0"),
+            call("grep", """{"pattern":"fun"}""", "call_0"),
+            call("edit_file", """{"path":"src/a.kt","old":"= 1","new":"= 2"}""", "call_0"),
+            say("done"),
+        ))
+        val c = controller(llm, FakeGitHub())
+        c.load(); c.send("do three things with one id")
+        val tools = c.items.filter { it.kind == "tool" }
+        assertEquals(listOf("read_file", "grep", "edit_file"), tools.map { it.extra })
+        assertTrue(tools.all { it.ok && !it.running })
+        assertEquals(listOf("src/a.kt", "fun", "src/a.kt"), tools.map { it.text })
+        assertEquals(1, c.changes.size)
+    }
+
     @Test fun argSummary() {
         assertEquals("a/b.kt", SessionController.argSummary("""{"path":"a/b.kt","old":"x"}"""))
         assertEquals("foo", SessionController.argSummary("""{"pattern":"foo"}"""))
