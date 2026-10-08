@@ -23,6 +23,16 @@ strix run "add JWT auth with tests" --branch strix/jwt --pr    # headless, ends 
 `GITHUB_TOKEN` (repo scope) is only needed to clone private repos, push and open PRs. It is sent as a one-off HTTP
 header and never written to `.git/config`, and it is stripped from the environment of commands the agent runs.
 
+## On your phone (Android + Termux, no PC needed)
+
+1. Install **Termux from F-Droid** (not the Play Store).
+2. Paste: `pkg install -y curl && curl -fsSL https://raw.githubusercontent.com/mohsen111-ai/StrixAi/ccr-c1097969-w4w5qy/scripts/termux-install.sh | bash`
+3. Run `strix web` and open the printed link in Chrome. Add your free OpenRouter key in the page (⚙ Settings).
+
+The web UI is mobile-first: chat, plan, files, git, and tap-to-allow permission prompts. It listens on `localhost` only and
+requires an access token (the link contains it; it is remembered in a cookie). No extra dependencies beyond the TUI's.
+`strix web --port 8010` picks another port. Projects live in `~/strix-projects`.
+
 ## How it works
 
 ```

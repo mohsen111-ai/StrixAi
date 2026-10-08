@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05060A">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305060A'/%3E%3Cpath d='M18 30 L28 12 L42 26 L58 26 L72 12 L82 30 L82 72 L50 94 L18 72Z' fill='none' stroke='%23fff' stroke-width='5'/%3E%3Cpath d='M24 42H46V58L35 65L24 58ZM76 42H54V58L65 65L76 58Z' fill='%23FF1744'/%3E%3C/svg%3E">
+<title>Strix</title>
+<style>
+:root{
+  --bg:#05060A;--bg2:#0A0C14;--panel:#0C0F18;--panel2:#121624;
+  --red:#FF1744;--red-dim:#7A0C22;--glow:rgba(255,23,68,.38);
+  --w:#fff;--mute:rgba(255,255,255,.62);--faint:rgba(255,255,255,.4);--line:rgba(255,255,255,.12);--line2:rgba(255,255,255,.24);
+  --mono:ui-monospace,"JetBrains Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:"Chakra Petch",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ease:cubic-bezier(.2,.9,.1,1);
+  --top:env(safe-area-inset-top,0px);--bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--w);font:15px/1.5 var(--sans);overflow:hidden}
+body{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;height:100dvh;width:100%;max-width:100vw;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px),radial-gradient(70% 40% at 100% 0,rgba(255,23,68,.18),transparent 70%);
+  background-size:30px 30px,30px 30px,auto;background-color:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.mono{font-family:var(--mono)}
+.dim{color:var(--mute)} .faint{color:var(--faint)} .red{color:var(--red)}
+
+/* header */
+header{min-width:0;display:flex;align-items:center;gap:10px;padding:calc(10px + var(--top)) 14px 10px;background:rgba(10,12,20,.92);border-bottom:1px solid var(--line)}
+.logo{width:26px;height:26px;flex:none}
+.brand{font-weight:700;letter-spacing:.24em;font-size:15px}
+.proj{flex:1;min-width:0;text-align:left;background:none;border:0;padding:6px 8px;color:var(--mute);font:500 13px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj b{color:#fff;font-weight:500}
+.pill{border:1px solid var(--line2);background:transparent;padding:5px 10px;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);transition:all 120ms var(--ease)}
+.pill.hot{border-color:var(--red);color:#fff;background:rgba(255,23,68,.14)}
+.icon{width:36px;height:36px;display:grid;place-items:center;background:none;border:1px solid var(--line);color:var(--mute)}
+
+/* tabs */
+nav{display:flex;border-bottom:1px solid var(--line);background:var(--bg2)}
+nav button{flex:1;padding:11px 0;background:none;border:0;border-bottom:2px solid transparent;font:600 12px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);transition:all 120ms var(--ease)}
+nav button.on{color:#fff;border-bottom-color:var(--red);box-shadow:0 8px 14px -10px var(--glow)}
+
+main{position:relative;min-height:0;overflow:hidden}
+.pane{position:absolute;inset:0;min-width:0;overflow-y:auto;padding:14px;display:none;overscroll-behavior:contain}
+.pane.on{display:block}
+#chat{display:none;flex-direction:column;gap:10px;padding-bottom:18px}
+#chat.on{display:flex}
+
+/* chat items */
+.cut{clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+.user{align-self:flex-end;max-width:88%;background:var(--red);color:#fff;padding:9px 14px;font-weight:500;white-space:pre-wrap;word-break:break-word;clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%)}
+.chip{font:500 11px var(--mono);letter-spacing:.06em;color:var(--mute);display:flex;align-items:center;gap:6px;margin-top:4px}
+.chip i{color:var(--red);font-style:normal}
+.say{background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--red);padding:10px 14px;word-break:break-word;overflow-wrap:anywhere}
+.say p{margin:0 0 8px}.say p:last-child{margin:0}
+.say pre,.diff,.fileview{background:#05060A;border:1px solid var(--line);padding:10px;overflow-x:auto;font:12px/1.5 var(--mono);margin:8px 0;white-space:pre}
+.say code{font:12.5px var(--mono);background:var(--panel2);padding:1px 5px}
+.tool{background:var(--panel);border:1px solid var(--line);font:12px var(--mono)}
+.tool>button{width:100%;display:flex;gap:8px;align-items:center;padding:8px 10px;background:none;border:0;text-align:left;color:var(--mute)}
+.tool>button span.n{color:#fff;flex:none}.tool>button span.a{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tool .ok{color:#fff}.tool .bad{color:var(--red);font-weight:700}
+.tool .more{display:none;padding:0 10px 10px}
+.tool.open .more{display:block}
+.diff{margin:0}.diff .add{background:rgba(255,255,255,.08);display:block}.diff .del{background:rgba(255,23,68,.16);color:#ffb3c1;display:block}.diff .hunk{color:var(--red);display:block}
+.note{font:12px var(--mono);color:var(--faint);padding:2px 4px}
+.err{border:1px solid var(--red);background:rgba(255,23,68,.1);padding:10px 12px;font:13px var(--mono);white-space:pre-wrap;word-break:break-word}
+.card{background:var(--panel);border:1px solid var(--line2);padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 8px;font-size:13px;letter-spacing:.16em;text-transform:uppercase}
+.card.hot{border-color:var(--red);box-shadow:0 0 22px -6px var(--glow)}
+.plan{white-space:pre-wrap;font:12.5px/1.6 var(--mono);color:var(--mute)}
+.hello{text-align:center;padding:26px 8px 8px}
+.hello svg{width:84px;height:84px;filter:drop-shadow(0 0 22px var(--glow))}
+.hello h2{margin:12px 0 4px;font-size:20px;letter-spacing:.08em}
+.sugg{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.sugg button{width:100%;text-align:left;padding:12px 14px;background:var(--panel);border:1px solid var(--line2);color:#fff;transition:all 120ms var(--ease)}
+.sugg button:active{border-color:var(--red);transform:translateX(3px)}
+
+/* composer */
+.composer{border-top:1px solid var(--red);background:var(--bg2);padding:8px 10px calc(8px + var(--bot))}
+#busy{display:none;align-items:center;gap:8px;font:12px var(--mono);color:var(--red);padding:2px 4px 8px}
+#busy.on{display:flex}
+#busy .sp{width:10px;height:10px;background:var(--red);transform:rotate(45deg);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px transparent;opacity:.55}0%,100%{box-shadow:0 0 0 0 var(--glow)}}
+.row{display:flex;gap:8px;align-items:flex-end}
+textarea#box{flex:1;resize:none;max-height:140px;min-height:44px;background:var(--panel);border:1px solid var(--line2);color:#fff;padding:11px 12px;font:16px/1.4 var(--sans);border-radius:0}
+textarea#box:focus{border-color:var(--red);outline:none;box-shadow:0 0 0 1px var(--red),0 0 16px -4px var(--glow)}
+.send{width:48px;height:44px;border:0;background:var(--red);color:#fff;font-size:20px;font-weight:700;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);transition:transform 100ms var(--ease)}
+.send:active{transform:scale(.94)}
+.send.stop{background:#fff;color:#05060A}
+
+/* buttons / forms */
+.btn{display:block;width:100%;padding:13px 14px;border:1px solid var(--line2);background:var(--panel);color:#fff;font:600 13px var(--sans);letter-spacing:.12em;text-transform:uppercase;text-align:center;transition:all 120ms var(--ease)}
+.btn:active{transform:translateY(1px);border-color:var(--red)}
+.btn.pri{background:var(--red);border-color:var(--red)}
+.btn.ghost{background:transparent}
+.btns{display:grid;gap:8px;margin-top:10px}
+.btns.two{grid-template-columns:1fr 1fr}
+input[type=text],input[type=password]{width:100%;background:var(--bg);border:1px solid var(--line2);color:#fff;padding:12px;font:16px var(--mono);border-radius:0}
+input:focus{border-color:var(--red);outline:none}
+label.f{display:block;margin:10px 0 4px;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.kv{display:flex;justify-content:space-between;gap:10px;font:13px var(--mono);padding:4px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border:0}
+.bar{height:5px;background:var(--line);margin:6px 0 2px}.bar i{display:block;height:100%;background:var(--red);box-shadow:0 0 8px var(--red);transition:width 300ms var(--ease)}
+.todo{display:flex;gap:10px;padding:6px 0;font-size:14px}
+.todo.done{color:var(--faint);text-decoration:line-through}
+.todo.now{color:#fff}.todo.now b{color:var(--red);animation:pulse2 1.2s infinite}
+@keyframes pulse2{50%{opacity:.3}}
+.list button{display:flex;width:100%;gap:10px;align-items:center;padding:12px 8px;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;font:14px var(--mono)}
+.list button:active{background:var(--panel2)}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;z-index:20}
+.scrim.on{display:block;animation:fade 140ms var(--ease)}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:88dvh;overflow-y:auto;background:var(--panel);border-top:2px solid var(--red);padding:16px 16px calc(16px + var(--bot));z-index:21;transform:translateY(105%);transition:transform 180ms var(--ease);box-shadow:0 -10px 40px rgba(255,23,68,.18)}
+.sheet.on{transform:none}
+.sheet h2{margin:0 0 4px;font-size:15px;letter-spacing:.16em;text-transform:uppercase}
+.sheet .grab{width:44px;height:3px;background:var(--line2);margin:-4px auto 12px}
+@keyframes fade{from{opacity:0}}
+.opt{display:flex;gap:10px;padding:12px;border:1px solid var(--line);margin-top:8px;background:var(--bg);width:100%;text-align:left}
+.opt.on{border-color:var(--red);background:rgba(255,23,68,.1)}
+.opt b{display:block;font-size:14px}.opt span{font-size:12.5px;color:var(--mute)}
+#toast{position:fixed;left:14px;right:14px;bottom:calc(88px + var(--bot));z-index:40;background:#fff;color:#05060A;padding:11px 14px;font:600 13px var(--mono);transform:translateY(20px);opacity:0;pointer-events:none;transition:all 160ms var(--ease)}
+#toast.on{transform:none;opacity:1}#toast.bad{background:var(--red);color:#fff}
+.eye{transform-box:fill-box;transform-origin:center;animation:blink 7s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (min-width:760px){main .pane,#chat{max-width:760px;margin-inline:auto;left:0;right:0}.sheet{max-width:560px;margin-inline:auto;left:0;right:0}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="owl" viewBox="0 0 100 100">
+<path d="M18 30 L28 12 L42 26 L58 26 L72 12 L82 30 L82 72 L50 94 L18 72 Z" fill="none" stroke="#fff" stroke-width="3"/>
+<path d="M42 26 L50 37 L58 26" fill="none" stroke="#FF1744" stroke-width="2.6"/>
+<g class="eye"><path d="M24 42 L46 42 L46 58 L35 65 L24 58 Z" fill="#FF1744"/><path d="M76 42 L54 42 L54 58 L65 65 L76 58 Z" fill="#FF1744"/></g>
+<rect x="32" y="47" width="6" height="10" fill="#fff"/><rect x="62" y="47" width="6" height="10" fill="#fff"/>
+<path d="M50 60 L45 71 L50 78 L55 71 Z" fill="#fff"/><path d="M38 81 L50 88 L62 81" fill="none" stroke="#FF1744" stroke-width="2.6"/>
+</symbol></defs></svg>
+
+<header>
+  <svg class="logo"><use href="#owl"/></svg>
+  <span class="brand">STRIX</span>
+  <button class="proj" id="projBtn" aria-label="Switch project">▾ <b id="projName">project</b></button>
+  <button class="pill" id="modeBtn" aria-label="Permission mode">auto-edit</button>
+  <button class="icon" id="setBtn" aria-label="Settings">⚙</button>
+</header>
+<nav id="tabs">
+  <button data-t="chat" class="on">Chat</button><button data-t="plan">Plan</button><button data-t="files">Files</button><button data-t="git">Git</button>
+</nav>
+
+<main>
+  <section id="chat" class="pane on" aria-live="polite"></section>
+
+  <section id="plan" class="pane">
+    <div class="card"><h3>Checklist</h3><div id="todos" class="dim">No checklist yet. It appears when Strix works on a bigger task.</div></div>
+    <div class="card"><h3>Models</h3><div id="roles"></div></div>
+    <div class="card"><h3>Usage</h3>
+      <div class="kv"><span>Context used</span><span id="ctxPct">0%</span></div><div class="bar"><i id="ctxBar" style="width:0"></i></div>
+      <div class="kv"><span>Tokens</span><span id="tokens">0</span></div><div class="kv"><span>AI calls</span><span id="calls">0</span></div>
+    </div>
+  </section>
+
+  <section id="files" class="pane">
+    <div class="dim mono" id="crumb" style="margin-bottom:8px"></div>
+    <div class="list" id="fileList"></div>
+  </section>
+
+  <section id="git" class="pane">
+    <div class="card"><h3>Your work</h3>
+      <div class="kv"><span>Branch</span><span id="gBranch">-</span></div>
+      <div class="kv"><span>Changes</span><span id="gChanges">-</span></div>
+      <div class="kv"><span>GitHub</span><span id="gRemote">not connected</span></div>
+    </div>
+    <div class="card"><h3>Save and share</h3>
+      <input type="text" id="commitMsg" placeholder="What did you change? (optional)" autocomplete="off">
+      <div class="btns"><button class="btn pri" data-cmd="commit">Save changes</button>
+        <div id="gitRemoteBtns" class="btns two" style="margin:0"><button class="btn" data-cmd="push">Upload</button><button class="btn" data-cmd="pr">Make pull request</button></div>
+        <div id="gitCreate"><label class="f">Not on GitHub yet</label><input type="text" id="repoName" placeholder="repository name" autocomplete="off"><div class="btns"><button class="btn" id="createRepo">Create private GitHub repo</button></div></div>
+      </div>
+    </div>
+    <div class="card"><h3>Tools</h3><div class="btns two">
+      <button class="btn ghost" data-cmd="undo">Undo last edit</button><button class="btn ghost" data-cmd="new">New chat</button></div></div>
+  </section>
+</main>
+
+<div class="composer">
+  <div id="busy"><span class="sp"></span><span id="busyText">thinking</span></div>
+  <div class="row">
+    <textarea id="box" rows="1" placeholder="Tell Strix what to build or fix…" enterkeyhint="send"></textarea>
+    <button class="send" id="sendBtn" aria-label="Send">↑</button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="permSheet" role="dialog" aria-label="Permission"><div class="grab"></div>
+  <h2 class="red" id="permTitle">Allow?</h2><div class="dim" id="permSub" style="font-size:13px"></div>
+  <pre class="diff" id="permBody" style="max-height:36dvh;overflow:auto"></pre>
+  <div class="btns"><button class="btn pri" id="pYes">Allow</button><div class="btns two" style="margin:0"><button class="btn" id="pAlways">Always allow</button><button class="btn ghost" id="pNo">Deny</button></div></div>
+</div>
+
+<div class="sheet" id="setSheet"><div class="grab"></div>
+  <h2>Settings</h2>
+  <label class="f">OpenRouter key <span id="kOr" class="faint"></span></label>
+  <input type="password" id="inOr" placeholder="paste key (sk-or-…)" autocomplete="off">
+  <label class="f">GitHub token <span id="kGh" class="faint"></span></label>
+  <input type="password" id="inGh" placeholder="optional · to save work to GitHub" autocomplete="off">
+  <label class="f">Gemini key <span id="kGe" class="faint"></span></label>
+  <input type="password" id="inGe" placeholder="optional" autocomplete="off">
+  <div class="btns"><button class="btn pri" id="saveKeys">Save keys</button></div>
+  <label class="f" style="margin-top:18px">How careful should Strix be?</label>
+  <button class="opt" data-mode="ask"><div><b>Ask me first</b><span>Asks before every file change and command.</span></div></button>
+  <button class="opt" data-mode="auto-edit"><div><b>Auto-edit</b><span>Edits files freely, asks before running commands.</span></div></button>
+  <button class="opt" data-mode="yolo"><div><b>Full auto</b><span>Does everything. Only for projects you can afford to break.</span></div></button>
+  <button class="opt" id="planOpt"><div><b>Plan first</b><span>A stronger model writes a plan before bigger tasks.</span></div></button>
+  <p class="faint mono" id="ver" style="margin-top:16px"></p>
+</div>
+
+<div class="sheet" id="projSheet"><div class="grab"></div>
+  <h2>Projects</h2><div class="list" id="projList" style="margin-bottom:10px"></div>
+  <label class="f">New project</label><input type="text" id="newProj" placeholder="e.g. my-website" autocomplete="off">
+  <div class="btns"><button class="btn pri" id="mkProj">Create project</button></div>
+  <label class="f" style="margin-top:14px">Or download from GitHub</label><input type="text" id="cloneIn" placeholder="owner/repo" autocomplete="off">
+  <div class="btns"><button class="btn" id="cloneBtn">Download repo</button></div>
+</div>
+
+<div class="sheet" id="fileSheet"><div class="grab"></div>
+  <h2 id="fileName" class="mono" style="font-size:13px;letter-spacing:.04em;text-transform:none"></h2>
+  <pre class="fileview" id="fileText" style="max-height:66dvh;overflow:auto"></pre>
+  <div class="btns"><button class="btn ghost" data-close>Close</button></div>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+let S = null, lastId = 0, lastModel = "", curPerm = null, curPath = "";
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const short = m => String(m).split(":").slice(1).join(":").split("/").pop() || m;
+
+async function api(path, body, method) {
+  try {
+    const r = await fetch(path, {method: method || (body ? "POST" : "GET"), headers: {"Content-Type": "application/json"}, body: body ? JSON.stringify(body) : undefined});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { toast(j.error || "Something went wrong", true); return null; }
+    return j;
+  } catch (e) { toast("Cannot reach Strix. Is it still running in Termux?", true); return null; }
+}
+let tt;
+function toast(msg, bad) { const t = $("#toast"); t.textContent = msg; t.className = "on" + (bad ? " bad" : ""); clearTimeout(tt); tt = setTimeout(() => t.className = "", 3200); }
+
+/* ---------- markdown-lite ---------- */
+function md(text) {
+  const parts = String(text).split(/```/);
+  return parts.map((p, i) => {
+    if (i % 2) { const nl = p.indexOf("\n"); return "<pre>" + esc(nl > -1 ? p.slice(nl + 1) : p) + "</pre>"; }
+    return p.split(/\n{2,}/).filter(x => x.trim()).map(par =>
+      "<p>" + esc(par).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>") + "</p>").join("");
+  }).join("");
+}
+function diffHtml(d) {
+  return d.split("\n").slice(2).map(l => {
+    const c = l.startsWith("+") ? "add" : l.startsWith("-") ? "del" : l.startsWith("@@") ? "hunk" : "";
+    return `<span class="${c}">${esc(l)}</span>`;
+  }).join("");
+}
+
+/* ---------- chat ---------- */
+const chat = $("#chat");
+function nearBottom() { return chat.scrollHeight - chat.scrollTop - chat.clientHeight < 120; }
+function add(html, cls) {
+  const stick = nearBottom(), el = document.createElement("div");
+  el.className = cls || ""; el.innerHTML = html; chat.appendChild(el);
+  if (stick) chat.scrollTop = chat.scrollHeight;
+  return el;
+}
+function hello() {
+  chat.innerHTML = "";
+  const needs = S && S.needs_key;
+  let h = `<div class="hello"><svg><use href="#owl"/></svg><h2>What should we build?</h2><div class="dim">Describe it in plain words. Strix writes the code, runs it and fixes problems.</div></div>`;
+  if (needs) h += `<div class="card hot"><h3>One quick step</h3><div class="dim" style="font-size:14px;margin-bottom:10px">Strix needs a free AI key. Get one at <b>openrouter.ai/keys</b>, then paste it here.</div><input type="password" id="firstKey" placeholder="sk-or-…" autocomplete="off"><div class="btns"><button class="btn pri" id="firstSave">Save key</button></div></div>`;
+  h += `<div class="sugg">${["Build a simple to-do list web app","Make a one-page website for my business","Explain what this project does","Find and fix bugs in this project"].map(t => `<button>${esc(t)}</button>`).join("")}</div>`;
+  add(h, "welcome");
+}
+chat.addEventListener("click", e => {
+  const sg = e.target.closest(".sugg button"); if (sg) { $("#box").value = sg.textContent; $("#box").focus(); return; }
+  if (e.target.id === "firstSave") { const v = $("#firstKey").value.trim(); if (v) api("/api/settings", {openrouter: v}).then(r => r && toast("Key saved")); return; }
+  const tb = e.target.closest(".tool > button"); if (tb) tb.parentElement.classList.toggle("open");
+});
+
+function onEvent(ev) {
+  if (ev.id <= lastId) return; lastId = ev.id;
+  const w = $(".welcome"); 
+  switch (ev.kind) {
+    case "project": hello(); lastModel = ""; break;
+    case "state": S = ev; renderState(); break;
+    case "user": if (w) w.remove(); lastModel = ""; add(esc(ev.text), "user"); break;
+    case "model": { const k = ev.role + ev.model; if (k !== lastModel) { lastModel = k; add(`<i>◈</i> ${esc(ev.role)} <span class="faint">${esc(short(ev.model))}</span>`, "chip"); } break; }
+    case "plan": add(`<div class="card" style="margin:0"><h3 class="red">Plan</h3><div class="plan">${esc(ev.text)}</div></div>`); break;
+    case "say": add(md(ev.text), "say"); break;
+    case "tool_start": break;
+    case "tool_result": {
+      const a = ev.args || {}, arg = a.path || a.command || a.pattern || "";
+      const more = (ev.diff ? `<pre class="diff">${diffHtml(ev.diff)}</pre>` : "") + (ev.name === "bash" ? `<div class="faint">${esc(arg)}</div>` : "");
+      add(`<button><span class="n">⚙ ${esc(ev.name)}</span><span class="a">${esc(arg)}</span><span class="${ev.ok ? "ok" : "bad"}">${ev.ok ? "✓" : "✗"}</span></button><div class="more"><div class="dim">${esc(ev.summary)}</div>${more}</div>`, "tool" + (ev.diff ? " open" : ""));
+      break; }
+    case "info": case "compact": add("· " + esc(ev.text || ev.how), "note"); break;
+    case "error": add(esc(ev.text), "err"); break;
+    case "done": break;
+    case "permission": showPerm(ev); break;
+    case "permission_done": if (curPerm === ev.pid) closeSheets(); break;
+  }
+}
+
+/* ---------- state ---------- */
+const MODES = {"ask": "ask first", "auto-edit": "auto-edit", "yolo": "full auto"};
+function renderState() {
+  $("#projName").textContent = S.project;
+  const m = $("#modeBtn"); m.textContent = MODES[S.mode]; m.className = "pill" + (S.mode !== "ask" ? " hot" : "");
+  $("#busy").className = S.busy ? "on" : ""; $("#busyText").textContent = S.activity || "thinking";
+  const sb = $("#sendBtn"); sb.textContent = S.busy ? "■" : "↑"; sb.className = "send" + (S.busy ? " stop" : ""); sb.setAttribute("aria-label", S.busy ? "Stop" : "Send");
+  const ic = {done: "☑", in_progress: "▸", pending: "☐"};
+  $("#todos").innerHTML = S.todos.length ? S.todos.map(t => `<div class="todo ${t.status === "done" ? "done" : t.status === "in_progress" ? "now" : ""}"><b>${ic[t.status]}</b><span>${esc(t.text)}</span></div>`).join("") : '<span class="dim">No checklist yet. It appears when Strix works on a bigger task.</span>';
+  $("#roles").innerHTML = Object.keys(S.roles).map(r => `<div class="kv"><span class="red">${esc(r)}</span><span>${esc(short(S.current[r]))}</span></div>`).join("");
+  $("#ctxPct").textContent = S.context_pct + "%"; $("#ctxBar").style.width = S.context_pct + "%";
+  $("#tokens").textContent = S.tokens.toLocaleString(); $("#calls").textContent = S.calls;
+  const g = S.git;
+  $("#gBranch").textContent = g.repo ? g.branch : "not started";
+  $("#gChanges").textContent = g.repo ? `${g.files} files  +${g.added} −${g.removed}` : "-";
+  $("#gRemote").textContent = g.remote || "not connected";
+  $("#gitRemoteBtns").style.display = g.remote ? "grid" : "none"; $("#gitCreate").style.display = g.remote ? "none" : "block";
+  if (!$("#repoName").value) $("#repoName").placeholder = S.project;
+  $("#kOr").textContent = S.keys.openrouter ? "✓ set" : "not set"; $("#kGh").textContent = S.keys.github ? "✓ set" : "not set"; $("#kGe").textContent = S.keys.gemini ? "✓ set" : "not set";
+  $$("[data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === S.mode)); $("#planOpt").classList.toggle("on", S.planning);
+  $("#ver").textContent = "Strix " + S.version;
+  const first = $(".welcome"); if (first && (!!$("#firstKey") !== S.needs_key)) hello();
+}
+
+/* ---------- sheets ---------- */
+function openSheet(id) { $("#scrim").classList.add("on"); $(id).classList.add("on"); }
+function closeSheets() { $("#scrim").classList.remove("on"); $$(".sheet").forEach(s => s.classList.remove("on")); curPerm = null; }
+$("#scrim").addEventListener("click", () => { if (!curPerm) closeSheets(); });
+$$("[data-close]").forEach(b => b.addEventListener("click", closeSheets));
+const HUMAN = {write_file: "create or overwrite a file", edit_file: "change a file", bash: "run a command"};
+function showPerm(ev) {
+  curPerm = ev.pid; $("#permTitle").textContent = "Strix wants to " + (HUMAN[ev.name] || ev.name);
+  $("#permSub").textContent = ev.name === "bash" ? "This command will run on your phone:" : "Review the change:";
+  $("#permBody").innerHTML = ev.name === "bash" ? esc(ev.preview) : diffHtml("\n\n" + ev.preview);
+  if (navigator.vibrate) try { navigator.vibrate(40); } catch (e) {}
+  openSheet("#permSheet");
+}
+const answer = a => { if (!curPerm) return; const pid = curPerm; closeSheets(); api("/api/permission", {pid, answer: a}); };
+$("#pYes").onclick = () => answer("yes"); $("#pAlways").onclick = () => answer("always"); $("#pNo").onclick = () => answer("no");
+
+/* ---------- input ---------- */
+const box = $("#box");
+box.addEventListener("input", () => { box.style.height = "auto"; box.style.height = Math.min(140, box.scrollHeight) + "px"; });
+async function send() {
+  if (S && S.busy) { api("/api/stop", {}); return; }
+  const text = box.value.trim(); if (!text) return;
+  if (S && S.needs_key) { toast("Add your free AI key first (⚙ Settings)", true); openSheet("#setSheet"); return; }
+  box.value = ""; box.style.height = "auto";
+  const r = await api("/api/send", {text}); if (!r) box.value = text;
+}
+$("#sendBtn").onclick = send;
+box.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && window.innerWidth > 760) { e.preventDefault(); send(); } });
+
+/* ---------- tabs ---------- */
+$$("#tabs button").forEach(b => b.onclick = () => {
+  $$("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+  $$(".pane").forEach(p => p.classList.toggle("on", p.id === b.dataset.t));
+  if (b.dataset.t === "files") loadFiles(curPath);
+});
+
+/* ---------- buttons ---------- */
+$("#modeBtn").onclick = () => openSheet("#setSheet");
+$("#setBtn").onclick = () => openSheet("#setSheet");
+$$("[data-mode]").forEach(b => b.onclick = () => api("/api/mode", {mode: b.dataset.mode}));
+$("#planOpt").onclick = () => api("/api/planning", {on: !S.planning});
+$("#saveKeys").onclick = async () => {
+  const body = {}; [["inOr","openrouter"],["inGh","github"],["inGe","gemini"]].forEach(([id,k]) => { const v = $("#"+id).value.trim(); if (v) body[k] = v; });
+  if (!Object.keys(body).length) return toast("Paste a key first", true);
+  if (await api("/api/settings", body)) { ["inOr","inGh","inGe"].forEach(i => $("#"+i).value = ""); toast("Saved"); closeSheets(); }
+};
+$$("[data-cmd]").forEach(b => b.onclick = async () => {
+  const cmd = b.dataset.cmd, arg = cmd === "commit" ? $("#commitMsg").value.trim() : "";
+  b.disabled = true; toast("Working…");
+  const r = await api("/api/command", {cmd, arg}); b.disabled = false;
+  if (r) { toast(r.message); if (cmd === "commit") $("#commitMsg").value = ""; if (cmd === "new") hello(); }
+});
+$("#createRepo").onclick = async () => {
+  const name = $("#repoName").value.trim() || S.project, r = await api("/api/command", {cmd: "create_repo", arg: name});
+  if (r) { toast(r.message); await api("/api/command", {cmd: "push"}); }
+};
+$("#projBtn").onclick = async () => {
+  const r = await api("/api/projects"); if (!r) return;
+  $("#projList").innerHTML = r.projects.map(p => `<button data-p="${esc(p.name)}"><span class="${p.current ? "red" : "faint"}">${p.current ? "●" : "○"}</span><span>${esc(p.name)}</span>${p.git ? '<span class="faint" style="margin-left:auto">git</span>' : ""}</button>`).join("");
+  openSheet("#projSheet");
+};
+$("#projList").onclick = async e => { const b = e.target.closest("[data-p]"); if (b && await api("/api/project", {name: b.dataset.p})) closeSheets(); };
+$("#mkProj").onclick = async () => { const n = $("#newProj").value.trim(); if (n && await api("/api/project", {name: n})) { $("#newProj").value = ""; closeSheets(); } };
+$("#cloneBtn").onclick = async () => { const n = $("#cloneIn").value.trim(); if (!n) return; toast("Downloading…"); if (await api("/api/project", {clone: n})) { $("#cloneIn").value = ""; closeSheets(); } };
+
+/* ---------- files ---------- */
+async function loadFiles(path) {
+  const r = await api("/api/files?path=" + encodeURIComponent(path || "")); if (!r) return;
+  curPath = r.path; $("#crumb").textContent = "/" + r.path;
+  const up = r.path ? `<button data-up><span>↰</span><span>..</span></button>` : "";
+  $("#fileList").innerHTML = up + (r.items.map(i => `<button data-n="${esc(i.name)}" data-d="${i.dir ? 1 : 0}"><span class="${i.dir ? "red" : "faint"}">${i.dir ? "▸" : "·"}</span><span>${esc(i.name)}${i.dir ? "/" : ""}</span></button>`).join("") || '<div class="dim" style="padding:12px">This project is empty. Ask Strix to build something.</div>');
+}
+$("#fileList").onclick = async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.hasAttribute("data-up")) return loadFiles(curPath.split("/").slice(0, -1).join("/"));
+  const p = (curPath ? curPath + "/" : "") + b.dataset.n;
+  if (b.dataset.d === "1") return loadFiles(p);
+  const r = await api("/api/file?path=" + encodeURIComponent(p)); if (!r) return;
+  $("#fileName").textContent = r.path; $("#fileText").textContent = r.binary ? "(binary file)" : r.text; openSheet("#fileSheet");
+};
+
+/* ---------- connect ---------- */
+function connect() {
+  const es = new EventSource("/api/events?after=" + lastId);
+  es.onmessage = m => { try { onEvent(JSON.parse(m.data)); } catch (e) { console.error(e); } };
+}
+hello(); connect();
+</script>
+</body>
+</html>

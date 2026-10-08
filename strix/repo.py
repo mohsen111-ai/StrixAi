@@ -130,3 +130,20 @@ async def open_pr(root: Path, title: str, body: str, base: str | None = None) ->
     if r.status_code >= 300:
         raise GitError(f"GitHub said {r.status_code}: {r.text[:200]}")
     return r.json()["html_url"]
+
+
+async def create_github_repo(root: Path, name: str, private: bool = True) -> str:
+    """Create a repo on the signed-in user's GitHub account and set it as 'origin'."""
+    tok = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if not tok:
+        raise GitError("add a GitHub token in Settings first")
+    headers = {"Authorization": f"Bearer {tok}", "Accept": "application/vnd.github+json"}
+    async with httpx.AsyncClient(timeout=30, headers=headers) as c:
+        r = await c.post("https://api.github.com/user/repos", json={"name": name, "private": private})
+    if r.status_code >= 300:
+        raise GitError(f"GitHub said {r.status_code}: {r.json().get('message', r.text[:200]) if r.headers.get('content-type', '').startswith('application/json') else r.text[:200]}")
+    url = r.json()["clone_url"]
+    ensure_repo(root)
+    git(root, "remote", "remove", "origin", check=False)
+    git(root, "remote", "add", "origin", url)
+    return r.json()["html_url"]

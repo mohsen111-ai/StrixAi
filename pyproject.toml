@@ -20,7 +20,7 @@ strix = "strix.cli:main"
 packages = ["strix"]
 
 [tool.setuptools.package-data]
-strix = ["*.yaml", "*.tcss"]
+strix = ["*.yaml", "*.tcss", "*.html"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

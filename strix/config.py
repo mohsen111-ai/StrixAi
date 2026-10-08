@@ -79,10 +79,14 @@ class Config:
         return out
 
 
+def strix_home() -> Path:
+    return Path(os.environ.get("STRIX_HOME") or Path.home() / ".config" / "strix")
+
+
 def _search_paths(explicit: str | None) -> list[Path]:
     if explicit:
         return [Path(explicit)]
-    return [Path.cwd() / "strix.yaml", Path.home() / ".config" / "strix" / "strix.yaml"]
+    return [Path.cwd() / "strix.yaml", strix_home() / "strix.yaml"]
 
 
 def parse_config(data: dict, source: str = "inline") -> Config:
@@ -108,13 +112,13 @@ def load_config(path: str | None = None) -> Config:
 
 
 def load_dotenv(path: Path | None = None) -> None:
-    """Tiny .env reader so users can keep OPENROUTER_API_KEY next to the project."""
-    p = path or Path.cwd() / ".env"
-    if not p.is_file():
-        return
-    for line in p.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
+    """Tiny .env reader. Reads ./.env and the per-user env file (where the web UI saves keys)."""
+    for p in ([path] if path else [Path.cwd() / ".env", strix_home() / "env"]):
+        if not p.is_file():
             continue
-        k, v = line.split("=", 1)
-        os.environ.setdefault(k.strip().removeprefix("export "), v.strip().strip("'\""))
+        for line in p.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip().removeprefix("export "), v.strip().strip("'\""))

@@ -156,6 +156,9 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("task"); run.add_argument("--branch"); run.add_argument("--pr", action="store_true", help="commit, push and open a PR afterwards")
     models = sub.add_parser("models", help="list tool-capable OpenRouter models")
     models.add_argument("search", nargs="*"); models.add_argument("--free", action="store_true"); models.add_argument("--limit", type=int, default=60)
+    web = sub.add_parser("web", help="phone-friendly web UI (open it in your browser)")
+    web.add_argument("--port", type=int, default=8000); web.add_argument("--host", default="127.0.0.1")
+    web.add_argument("--projects", help="folder that holds your projects (default ~/strix-projects)")
     sub.add_parser("doctor", help="check config and keys"); sub.add_parser("init", help="write strix.yaml, STRIX.md and .env here")
 
     args = ap.parse_args(argv)
@@ -166,6 +169,15 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_models(args)
         if args.cmd == "doctor":
             return cmd_doctor(args)
+        if args.cmd == "web":
+            from .web import serve
+            cfg = load_config(args.config)
+            try:
+                asyncio.run(serve(cfg, Path(args.projects or "~/strix-projects").expanduser(), args.host, args.port))
+            except OSError as e:
+                console.print(f"[red]cannot start on port {args.port}: {escape(str(e))}. Try --port 8010[/]")
+                return 2
+            return 0
         if args.cmd == "run":
             return asyncio.run(_run_headless(args))
         from .tui import run_tui
