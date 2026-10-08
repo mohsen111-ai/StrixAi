@@ -32,20 +32,20 @@ class Workspace(
     private val staged = LinkedHashMap<String, String?>() // null = deleted
 
     // ---- reading ---------------------------------------------------------
-    fun allPaths(): List<String> = ((base.keys + others + staged.filterValues { it != null }.keys) - staged.filterValues { it == null }.keys).sorted()
+    @Synchronized fun allPaths(): List<String> = ((base.keys + others + staged.filterValues { it != null }.keys) - staged.filterValues { it == null }.keys).sorted()
 
-    fun exists(path: String): Boolean = when {
+    @Synchronized fun exists(path: String): Boolean = when {
         staged.containsKey(path) -> staged[path] != null
         else -> path in base || path in others
     }
 
-    fun isBinary(path: String) = path in others && !staged.containsKey(path)
+    @Synchronized fun isBinary(path: String) = path in others && !staged.containsKey(path)
 
-    fun read(path: String): String? = if (staged.containsKey(path)) staged[path] else base[path]
+    @Synchronized fun read(path: String): String? = if (staged.containsKey(path)) staged[path] else base[path]
 
-    fun textPaths(): List<String> = allPaths().filter { !isBinary(it) }
+    @Synchronized fun textPaths(): List<String> = allPaths().filter { !isBinary(it) }
 
-    fun list(dir: String): List<String> {
+    @Synchronized fun list(dir: String): List<String> {
         val d = normalize(dir).trimEnd('/')
         val prefix = if (d.isEmpty()) "" else "$d/"
         val seen = LinkedHashSet<String>()
@@ -59,24 +59,24 @@ class Workspace(
     }
 
     // ---- writing ---------------------------------------------------------
-    fun write(path: String, content: String) {
+    @Synchronized fun write(path: String, content: String) {
         val p = checkWritable(path)
         if (content.length > 1_000_000) throw WorkspaceException("file too large (max 1 MB)")
         stage(p, content)
     }
 
-    fun delete(path: String) {
+    @Synchronized fun delete(path: String) {
         val p = checkWritable(path)
         if (!exists(p)) throw WorkspaceException("$p does not exist")
         stage(p, null)
     }
 
     /** Drop one file's staged edit and go back to the repo version. */
-    fun revert(path: String) { staged.remove(path) }
+    @Synchronized fun revert(path: String) { staged.remove(path) }
 
-    fun revertAll() = staged.clear()
+    @Synchronized fun revertAll() = staged.clear()
 
-    private fun stage(p: String, content: String?) {
+    @Synchronized private fun stage(p: String, content: String?) {
         // Staging the same text the repo already has is a no-op, so the change list stays honest.
         val inRepo = p in base || p in others
         if (content == null) {
@@ -88,7 +88,7 @@ class Workspace(
         }
     }
 
-    private fun checkWritable(path: String): String {
+    @Synchronized private fun checkWritable(path: String): String {
         val p = normalize(path)
         if (p.isEmpty()) throw WorkspaceException("empty path")
         if (p == ".git" || p.startsWith(".git/")) throw WorkspaceException(".git is read-only")
@@ -97,17 +97,17 @@ class Workspace(
     }
 
     // ---- review ----------------------------------------------------------
-    fun changes(): List<StagedChange> = staged.map { (p, new) ->
+    @Synchronized fun changes(): List<StagedChange> = staged.map { (p, new) ->
         val old = base[p]
         StagedChange(p, when { new == null -> ChangeKind.DELETED; old == null -> ChangeKind.ADDED; else -> ChangeKind.MODIFIED }, old, new)
     }.sortedBy { it.path }
 
-    fun hasChanges() = staged.isNotEmpty()
+    @Synchronized fun hasChanges() = staged.isNotEmpty()
 
-    fun toFileChanges(): List<FileChange> = staged.map { (p, c) -> FileChange(p, c) }
+    @Synchronized fun toFileChanges(): List<FileChange> = staged.map { (p, c) -> FileChange(p, c) }
 
     /** After a commit the staged edits become the new baseline. */
-    fun markCommitted(newSha: String, branch: String) {
+    @Synchronized fun markCommitted(newSha: String, branch: String) {
         for ((p, c) in staged) {
             if (c == null) { base.remove(p); others.remove(p) } else base[p] = c
         }
@@ -116,9 +116,9 @@ class Workspace(
         workBranch = branch
     }
 
-    fun exportOverlay(): List<OverlayEntry> = staged.map { OverlayEntry(it.key, it.value) }
+    @Synchronized fun exportOverlay(): List<OverlayEntry> = staged.map { OverlayEntry(it.key, it.value) }
 
-    fun importOverlay(entries: List<OverlayEntry>) {
+    @Synchronized fun importOverlay(entries: List<OverlayEntry>) {
         for (e in entries) {
             if (e.content != null && isBinary(e.path)) continue
             staged[e.path] = e.content
@@ -126,7 +126,7 @@ class Workspace(
     }
 
     // ---- search ----------------------------------------------------------
-    fun grep(regex: Regex, pathPrefix: String?, glob: Regex?, limit: Int = 100): List<String> {
+    @Synchronized fun grep(regex: Regex, pathPrefix: String?, glob: Regex?, limit: Int = 100): List<String> {
         val out = ArrayList<String>()
         val prefix = pathPrefix?.let { normalize(it).trimEnd('/') }.orEmpty()
         for (p in textPaths()) {
@@ -145,13 +145,13 @@ class Workspace(
         return out
     }
 
-    fun glob(pattern: String): List<String> {
+    @Synchronized fun glob(pattern: String): List<String> {
         val rx = globToRegex(pattern)
         return allPaths().filter { rx.matches(it) || (!pattern.contains('/') && rx.matches(it.substringAfterLast('/'))) }
     }
 
     /** A compact map of the repo that fits in a prompt: expands directories one level at a time while it stays small. */
-    fun repoMap(maxLines: Int = 120): String {
+    @Synchronized fun repoMap(maxLines: Int = 120): String {
         val paths = allPaths()
         if (paths.isEmpty()) return "(empty repository)"
         var best: List<String> = emptyList()
@@ -164,7 +164,7 @@ class Workspace(
         return best.take(maxLines + 20).joinToString("\n") + if (truncated) "\n(repo is large: only part of it was downloaded)" else ""
     }
 
-    private fun renderDepth(paths: List<String>, depth: Int): List<String> {
+    @Synchronized private fun renderDepth(paths: List<String>, depth: Int): List<String> {
         val out = LinkedHashMap<String, Int>() // entry -> file count (0 for plain files)
         for (p in paths) {
             val parts = p.split('/')

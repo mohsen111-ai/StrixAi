@@ -38,6 +38,10 @@ data class CommitResult(val commitSha: String, val branch: String, val url: Stri
 interface GitHubSource {
     suspend fun branchSha(repo: String, branch: String): String
     suspend fun snapshot(repo: String, sha: String): Snapshot
+    suspend fun createBranch(repo: String, name: String, fromSha: String)
+    suspend fun commit(repo: String, branch: String, parentSha: String, changes: List<FileChange>, message: String): CommitResult
+    suspend fun openPullRequest(repo: String, title: String, body: String, head: String, base: String): String
+    suspend fun existingPullRequest(repo: String, head: String, base: String): String?
 }
 
 class GitHubApi(
@@ -144,12 +148,12 @@ class GitHubApi(
         return Snapshot(files, others, truncated)
     }
 
-    suspend fun createBranch(repo: String, name: String, fromSha: String) {
+    override suspend fun createBranch(repo: String, name: String, fromSha: String) {
         send(post("/repos/$repo/git/refs", buildJsonObject { put("ref", "refs/heads/$name"); put("sha", fromSha) }))
     }
 
     /** One commit with every change, built through the git data API (no per-file requests). */
-    suspend fun commit(repo: String, branch: String, parentSha: String, changes: List<FileChange>, message: String): CommitResult {
+    override suspend fun commit(repo: String, branch: String, parentSha: String, changes: List<FileChange>, message: String): CommitResult {
         val baseTree = send(req("/repos/$repo/git/commits/$parentSha")).jsonObject["tree"]!!.jsonObject["sha"]!!.jsonPrimitive.content
         val tree = send(post("/repos/$repo/git/trees", buildJsonObject {
             put("base_tree", baseTree)
@@ -175,14 +179,14 @@ class GitHubApi(
         return CommitResult(sha, branch, "https://github.com/$repo/commit/$sha")
     }
 
-    suspend fun openPullRequest(repo: String, title: String, body: String, head: String, base: String): String {
+    override suspend fun openPullRequest(repo: String, title: String, body: String, head: String, base: String): String {
         val o = send(post("/repos/$repo/pulls", buildJsonObject {
             put("title", title); put("body", body); put("head", head); put("base", base)
         })).jsonObject
         return o["html_url"]!!.jsonPrimitive.content
     }
 
-    suspend fun existingPullRequest(repo: String, head: String, base: String): String? {
+    override suspend fun existingPullRequest(repo: String, head: String, base: String): String? {
         val owner = repo.substringBefore('/')
         val arr = send(req("/repos/$repo/pulls?state=open&head=${owner}:${encodePath(head)}&base=${encodePath(base)}")).jsonArray
         return arr.firstOrNull()?.jsonObject?.get("html_url")?.jsonPrimitive?.contentOrNull
