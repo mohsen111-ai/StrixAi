@@ -52,9 +52,10 @@ object Roles {
         FAST to "Commit messages and context summaries. Cheap and quick.",
     )
 
+    /** Free-first so a new key works at no cost, then cheap paid models, then Gemini's separate free quota. */
     val defaults: Map<String, List<ModelRef>> = mapOf(
-        PLANNER to listOf("openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", "openrouter:deepseek/deepseek-v4-flash", "openrouter:moonshotai/kimi-k2-thinking"),
-        CODER to listOf("openrouter:qwen/qwen3-coder-next", "openrouter:poolside/laguna-s-2.1:free", "openrouter:deepseek/deepseek-v4-flash", "openrouter:moonshotai/kimi-k2.6"),
+        PLANNER to listOf("openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", "openrouter:deepseek/deepseek-v4-flash", "openrouter:moonshotai/kimi-k2-thinking", "gemini:gemini-3.5-flash-lite"),
+        CODER to listOf("openrouter:poolside/laguna-s-2.1:free", "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free", "openrouter:qwen/qwen3-coder-next", "openrouter:deepseek/deepseek-v4-flash", "openrouter:moonshotai/kimi-k2.6", "gemini:gemini-3.5-flash-lite"),
         FAST to listOf("openrouter:google/gemma-4-26b-a4b-it:free", "gemini:gemini-3.5-flash-lite", "openrouter:google/gemini-3.5-flash-lite"),
     ).mapValues { (_, v) -> v.mapNotNull { ModelRef.parse(it) } }
 }

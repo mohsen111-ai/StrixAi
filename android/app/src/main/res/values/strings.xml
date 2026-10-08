@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Strix</string>
+    <string name="agent_channel">Agent activity</string>
+    <string name="agent_working">Strix is working</string>
+</resources>

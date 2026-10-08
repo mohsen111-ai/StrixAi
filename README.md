@@ -1,5 +1,7 @@
 # STRIX
 
+> **Android app:** a native app version lives in [`android/`](android/README.md). It needs no Termux or PC.
+
 An autonomous terminal coding agent that runs on open and budget models (Qwen, Kimi, DeepSeek, Gemini) through
 OpenRouter, Google AI Studio, or local servers like Ollama. It reads your repo, edits across files, runs your tests,
 and can commit, push and open a pull request.

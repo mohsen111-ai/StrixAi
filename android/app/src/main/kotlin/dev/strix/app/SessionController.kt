@@ -266,3 +266,11 @@ class SessionController(
         } catch (e: Exception) { "" }
     }
 }
+
+object ChangeKindLabel {
+    fun of(k: dev.strix.app.core.ChangeKind) = when (k) {
+        dev.strix.app.core.ChangeKind.ADDED -> "NEW"
+        dev.strix.app.core.ChangeKind.MODIFIED -> "EDIT"
+        dev.strix.app.core.ChangeKind.DELETED -> "DEL"
+    }
+}

@@ -118,7 +118,7 @@ class ToolBox(private val ws: Workspace, private val onTodo: (List<TodoItem>) ->
         val items = ws.list(path)
         if (items.isEmpty()) return ToolResult(false, "error: '${path.ifEmpty { "/" }}' is empty or does not exist")
         val shown = items.take(300)
-        return ToolResult(true, shown.joinToString("\n") + if (items.size > shown.size) "\n... ${items.size - shown.size} more" else "", "${items.size} entries")
+        return ToolResult(true, shown.joinToString("\n") + if (items.size > shown.size) "\n... ${items.size - shown.size} more" else "", "${items.size} ${if (items.size == 1) "entry" else "entries"}")
     }
 
     private fun readFile(path: String, start: Int?, end: Int?): ToolResult {
