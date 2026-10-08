@@ -1,0 +1,40 @@
+# Strix routing config. Copy to ./strix.yaml (run `strix init`) and edit.
+# Model spec = "<provider>:<model id>". Each role is a fallback chain: the first
+# model is tried first; on rate limits, errors or repeated bad tool calls, the next one is used.
+# Browse live ids with: strix models --free
+
+providers:
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+  gemini:                      # Google AI Studio, free tier. Uses the OpenAI-compatible endpoint.
+    base_url: https://generativelanguage.googleapis.com/v1beta/openai
+    api_key_env: GEMINI_API_KEY
+  ollama:                      # local models, no key needed
+    base_url: http://localhost:11434/v1
+    api_key_env: null
+
+roles:
+  planner:                     # architecture and hard reasoning (no tools)
+    - openrouter:nvidia/nemotron-3-ultra-550b-a55b:free
+    - openrouter:deepseek/deepseek-v4-flash
+    - openrouter:moonshotai/kimi-k2-thinking
+  coder:                       # the main tool-using loop: multi-file edits
+    - openrouter:qwen/qwen3-coder-next
+    - openrouter:poolside/laguna-s-2.1:free
+    - openrouter:deepseek/deepseek-v4-flash
+    - openrouter:moonshotai/kimi-k2.6
+  fast:                        # commit messages, summaries, context compaction
+    - openrouter:google/gemma-4-26b-a4b-it:free
+    - openrouter:google/gemini-3.5-flash-lite
+  longctx:                     # very large files / whole-repo reads
+    - openrouter:google/gemini-3.5-flash-lite
+    - openrouter:deepseek/deepseek-v4-flash
+
+settings:
+  mode: auto-edit              # ask | auto-edit | yolo
+  planning: true               # run the planner role before big tasks
+  max_steps: 40                # tool-loop iterations per task
+  context_tokens: 100000       # compaction starts at ~70% of this
+  temperature: 0.2
+  bad_calls_before_switch: 3   # consecutive invalid tool calls before moving to the next model

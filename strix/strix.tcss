@@ -1,0 +1,31 @@
+/* Strix theme: obsidian ground, crimson only for what is active, white for text and lines. */
+Screen { background: #05060A; color: #ffffff; }
+
+#topbar { height: 1; background: #0A0C14; padding: 0 1; }
+#body { height: 1fr; }
+#stream {
+    width: 1fr; background: #0C0F18; border: round #2b2f3d; padding: 0 1;
+    scrollbar-background: #0C0F18; scrollbar-color: #7A0C22; scrollbar-color-hover: #FF1744; scrollbar-size-vertical: 1;
+}
+#stream:focus { border: round #FF1744; }
+#side { width: 34; background: #0C0F18; border: round #2b2f3d; padding: 0 1; }
+.panel { height: auto; margin-bottom: 1; }
+#status { height: 1; padding: 0 2; color: #FF1744; background: #05060A; }
+#inputrow { height: 2; background: #0A0C14; border-top: solid #FF1744; }
+#caret { width: 3; padding: 0 1; color: #FF1744; text-style: bold; }
+#prompt { border: none; background: #0A0C14; color: #ffffff; padding: 0; height: 1; }
+#prompt:focus { border: none; background: #0A0C14; }
+#prompt > .input--placeholder { color: #6b7080; }
+#hints { width: auto; padding: 0 1; color: #6b7080; }
+
+SplashScreen { align: center middle; background: #05060A; }
+#splash { width: 60; height: auto; align-horizontal: center; content-align: center middle; }
+#splash-art { width: 100%; content-align: center middle; text-align: center; }
+#splash-boot { width: 100%; margin-top: 1; padding: 0 6; }
+#splash-bar { width: 100%; text-align: center; margin-top: 1; }
+
+PermissionScreen { align: center middle; background: #05060A 80%; }
+#dialog { width: 92%; max-width: 110; height: auto; max-height: 88%; background: #0C0F18; border: heavy #FF1744; padding: 1 2; }
+#dialog-title { color: #FF1744; text-style: bold; margin-bottom: 1; }
+#dialog-body { height: auto; max-height: 24; overflow-y: auto; background: #05060A; padding: 0 1; margin-bottom: 1; }
+#dialog-keys { height: 1; }
